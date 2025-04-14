@@ -1,5 +1,6 @@
-// app/login/page.tsx
 "use client"
+
+import type React from "react"
 
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
@@ -7,16 +8,25 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Checkbox } from "@/components/ui/checkbox"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { signIn } from "next-auth/react"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 
 export default function LoginPage() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [error, setError] = useState("")
   const [isLoading, setIsLoading] = useState(false)
+  const [isRegistered, setIsRegistered] = useState(false)
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const redirect = searchParams.get("redirect") || "/dashboard"
+
+  useEffect(() => {
+    if (searchParams.get("registered") === "true") {
+      setIsRegistered(true)
+    }
+  }, [searchParams])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -36,7 +46,16 @@ export default function LoginPage() {
         return
       }
 
-      router.push("/")
+      // Check if user is admin and redirect accordingly
+      const response = await fetch("/api/auth/session")
+      const session = await response.json()
+
+      if (session?.user?.role === "admin") {
+        router.push("/admin")
+      } else {
+        router.push(redirect)
+      }
+
       router.refresh()
     } catch (error) {
       setError("An error occurred. Please try again.")
@@ -53,20 +72,21 @@ export default function LoginPage() {
         </CardHeader>
         <form onSubmit={handleSubmit}>
           <CardContent className="space-y-4">
-            {error && (
-              <div className="bg-red-50 text-red-500 px-3 py-2 rounded-md text-sm">
-                {error}
+            {isRegistered && (
+              <div className="bg-green-50 text-green-600 px-3 py-2 rounded-md text-sm">
+                Registration successful! Please login with your credentials.
               </div>
             )}
+            {error && <div className="bg-red-50 text-red-500 px-3 py-2 rounded-md text-sm">{error}</div>}
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
-              <Input 
-                id="email" 
-                type="email" 
-                placeholder="m.example@mapua.edu.ph" 
+              <Input
+                id="email"
+                type="email"
+                placeholder="m.example@mapua.edu.ph"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                required 
+                required
               />
             </div>
             <div className="space-y-2">
@@ -76,12 +96,12 @@ export default function LoginPage() {
                   Forgot password?
                 </Link>
               </div>
-              <Input 
-                id="password" 
-                type="password" 
+              <Input
+                id="password"
+                type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                required 
+                required
               />
             </div>
             <div className="flex items-center space-x-2">
@@ -92,11 +112,7 @@ export default function LoginPage() {
             </div>
           </CardContent>
           <CardFooter className="flex flex-col">
-            <Button 
-              type="submit" 
-              className="w-full bg-[#932e1d] hover:bg-[#7a2617]"
-              disabled={isLoading}
-            >
+            <Button type="submit" className="w-full bg-[#932e1d] hover:bg-[#7a2617]" disabled={isLoading}>
               {isLoading ? "Logging in..." : "Login"}
             </Button>
             <p className="mt-4 text-center text-sm text-muted-foreground">

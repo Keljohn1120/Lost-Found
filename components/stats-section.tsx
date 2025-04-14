@@ -1,76 +1,72 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent } from "@/components/ui/card"
+import { prisma } from "@/lib/db"
 
-export function StatsSection() {
+export async function StatsSection() {
+  // Fetch stats
+  const stats = await getStats()
+
   return (
-    <section className="container py-12 border-t">
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Items</CardTitle>
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="2"
-              className="h-4 w-4 text-muted-foreground"
-            >
-              <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
-            </svg>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">245</div>
-            <p className="text-xs text-muted-foreground">+12% from last month</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Lost Items</CardTitle>
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="2"
-              className="h-4 w-4 text-muted-foreground"
-            >
-              <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
-              <circle cx="9" cy="7" r="4" />
-              <path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" />
-            </svg>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">156</div>
-            <p className="text-xs text-muted-foreground">+8% from last month</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Found Items</CardTitle>
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="2"
-              className="h-4 w-4 text-muted-foreground"
-            >
-              <rect width="20" height="14" x="2" y="5" rx="2" />
-              <path d="M2 10h20" />
-            </svg>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">89</div>
-            <p className="text-xs text-muted-foreground">+19% from last month</p>
-          </CardContent>
-        </Card>
+    <section className="py-12 bg-white">
+      <div className="container px-4 md:px-6">
+        <div className="flex flex-col items-center justify-center space-y-4 text-center">
+          <div className="space-y-2">
+            <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl text-[#932e1d]">Our Impact</h2>
+            <p className="max-w-[900px] text-gray-500 md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
+              See how our platform has helped the Mapua community.
+            </p>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-8 w-full">
+            <Card>
+              <CardContent className="p-6 flex flex-col items-center justify-center">
+                <p className="text-3xl font-bold text-[#932e1d]">{stats.totalItems}</p>
+                <p className="text-sm font-medium">Total Items</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="p-6 flex flex-col items-center justify-center">
+                <p className="text-3xl font-bold text-[#932e1d]">{stats.lostItems}</p>
+                <p className="text-sm font-medium">Lost Items</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="p-6 flex flex-col items-center justify-center">
+                <p className="text-3xl font-bold text-[#932e1d]">{stats.foundItems}</p>
+                <p className="text-sm font-medium">Found Items</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="p-6 flex flex-col items-center justify-center">
+                <p className="text-3xl font-bold text-[#932e1d]">{stats.itemsReturned}</p>
+                <p className="text-sm font-medium">Items Returned</p>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
       </div>
     </section>
   )
+}
+
+async function getStats() {
+  try {
+    const totalItems = await prisma.item.count()
+    const lostItems = await prisma.item.count({ where: { type: "lost" } })
+    const foundItems = await prisma.item.count({ where: { type: "found" } })
+    const itemsReturned = await prisma.item.count({ where: { status: "resolved" } })
+
+    return {
+      totalItems,
+      lostItems,
+      foundItems,
+      itemsReturned,
+    }
+  } catch (error) {
+    console.error("Error fetching stats:", error)
+    return {
+      totalItems: 0,
+      lostItems: 0,
+      foundItems: 0,
+      itemsReturned: 0,
+    }
+  }
 }

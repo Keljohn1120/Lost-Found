@@ -1,7 +1,6 @@
-// components/item-card.tsx
 import Image from "next/image"
 import Link from "next/link"
-import { MapPin, Calendar } from 'lucide-react'
+import { MapPin, Calendar } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
